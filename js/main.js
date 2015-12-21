@@ -180,7 +180,7 @@ var clickHandler = function(evt) {
         reverseMap[evt.target.id].idx
       ].url;
       //console.log('open ' + url + evt.target.dataset.key);
-      window.open(url + evt.targetdataset.key, '_blank');
+      window.open(url + evt.target.dataset.key, '_blank');
       break;
   }
 };
