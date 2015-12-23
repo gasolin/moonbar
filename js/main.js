@@ -1,3 +1,4 @@
+'use strict';
 // Check https://github.com/gasolin/moonbar for more detail
 // lets hack apps/search/js/providers/suggestions
 var _getProvider = function(type, id) {
@@ -53,7 +54,7 @@ var _createTag = function(parent, key, content, isVerb, actionType) {
   parent.appendChild(ele);
 };
 
-var renderTags = function(element, verbs, results) {
+var renderTags = function(element, verbs, restTerm, results, inputText) {
   // render default labels
   if (!verbs || verbs.length == 0) {
     _createTag(element, 'open', 'Open', true);
@@ -63,7 +64,7 @@ var renderTags = function(element, verbs, results) {
     });
   } else {
     if (results.length != 0) {
-      hasOpenTag = false;
+      var hasOpenTag = false;
       results.forEach(function(result) {
         var noun = reverseMap[result];
         if (noun.type == 'open' && !hasOpenTag) {
@@ -73,8 +74,18 @@ var renderTags = function(element, verbs, results) {
           _createTag(element, noun.name.toLowerCase(), noun.name, true);
         }
       });
+
+      if (verbs) {
+        queryInstantSuggestions(verbs[0], restTerm).then(function(suggestions) {
+          suggestions.forEach(function(result) {
+            _createTag(element, result, result, false, 'search');
+          });
+          // keyboard navigatable
+          $('.focusable').SpatialNavigation();
+        });
+      }
     } else {
-      queryInstantSuggestions(verbs).then(function(suggestions) {
+      queryInstantSuggestions(inputText).then(function(suggestions) {
         suggestions.forEach(function(result) {
           _createTag(element, result, result, false, 'search');
         });
@@ -220,7 +231,7 @@ var _createSuggestion = function(parent, id, actionType, content, key) {
   parent.appendChild(ele);
 };
 
-var renderSuggestions = function(element, verb, restTerm, results) {
+var renderSuggestions = function(element, verb, restTerm, results, inputText) {
   // show default verb tags
   if (searchfield.value.length == 0) {
     // make everything navigatable
@@ -252,7 +263,7 @@ var renderSuggestions = function(element, verb, restTerm, results) {
     });
   } else { // search through default search provider
     //suggestionsSelect.innerHTML = '<li>' + 'Search ' + searchfield.value + '</li>';
-    var restTerm = searchfield.value;
+    var restTerm = inputText;
     _createSuggestion(
       element,
       verbSearch.providers[verbSearch.default].name.toLowerCase(),
@@ -267,8 +278,8 @@ var renderSuggestions = function(element, verb, restTerm, results) {
 var processInputs = function() {
   var [verb, restTerm, results] = huxian.parse(searchfield.value, searchPool);
   resetUI();
-  renderTags(suggestionTags, verb, results);
-  renderSuggestions(suggestionsSelect, verb, restTerm, results);
+  renderTags(suggestionTags, verb, restTerm, results, searchfield.value);
+  renderSuggestions(suggestionsSelect, verb, restTerm, results, searchfield.value);
 };
 
 // init start
